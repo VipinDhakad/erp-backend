@@ -60,7 +60,7 @@ Each feature package generally has `api/` (controllers + DTOs), `domain/`
 | `analytics/*` | Read-only computed dashboards (per-student and school-wide) | Adding a new analytics metric/chart |
 | `common/error` | `ApiError` response shape, exception types (`NotFoundException`, `ConflictException`), `GlobalExceptionHandler` | Adding a new error type or changing the error response format |
 | `common/tenant` | `SchoolContext` — reads the current user's `schoolId` from the security context | Any code that needs to scope a query by school (multi-tenancy is schema-ready but not yet enforced everywhere) |
-| `common/config` | `OpenApiConfig` — Swagger metadata + security scheme | Changing API docs title/description or the auth scheme shown in Swagger |
+| `common/config` | `OpenApiConfig` (Swagger metadata + security scheme), `RenderDatabaseUrlConverter` (adapts a PaaS `DATABASE_URL` into Spring's datasource properties) | Changing API docs title/description/auth scheme, or how the app picks up its DB connection on a new host |
 | `common/logging` | `RequestLoggingFilter` — logs every request/response with status + duration | Changing what gets logged per-request |
 | `common/audit` | `BaseEntity` — shared `createdAt`/`updatedAt` base class | Adding a new auditable field to all entities |
 | `src/main/resources/db/migration` | Flyway schema migrations (`V1__schema.sql`, `V2__assignments_attendance.sql`) | **Any** schema change — add a new `V{n}__description.sql`, never edit an already-applied one |
@@ -68,6 +68,8 @@ Each feature package generally has `api/` (controllers + DTOs), `domain/`
 | `src/main/resources/templates/reports` | Report card HTML template | Changing report card visual layout |
 | `pom.xml` | Dependencies, Java version, build plugins | Adding a library, bumping Spring Boot |
 | `docker-compose.yml` | Local Postgres container | Changing local DB port/credentials |
+| `Dockerfile` | Multi-stage build for deployment (Render or any container host) | Changing the JDK/JRE version, build steps, or exposed port |
+| `render.yaml` | Render Blueprint — provisions the managed Postgres + web service together | Changing what gets provisioned on Render or its env var wiring |
 
 ## Access control model
 
@@ -99,3 +101,59 @@ requests interactively; the same spec is available as raw JSON at
 ```bash
 ./mvnw test
 ```
+
+## Deploying to Render
+
+The repo ships a [`Dockerfile`](Dockerfile) (multi-stage: builds with the
+Maven wrapper on `eclipse-temurin:21-jdk-alpine`, runs on the `21-jre-alpine`
+slim image) and a [`render.yaml`](render.yaml) Blueprint that provisions a
+free-tier managed Postgres plus the web service in one shot.
+
+### Option A — Blueprint (recommended)
+
+1. Push this repo to GitHub (a **public** repo, or connect Render to your
+   GitHub account for private repos).
+2. In the Render dashboard: **New → Blueprint**, pick this repo. Render reads
+   `render.yaml` and creates both `erp-db` (Postgres) and `erp-backend` (web
+   service) together, wiring the DB connection automatically.
+3. Click **Apply**. First build takes a few minutes (Maven dependency
+   download + Docker layer build).
+4. Once live, your API is at `https://erp-backend-<random>.onrender.com`,
+   Swagger UI at `.../swagger-ui/index.html`.
+
+### Option B — Manual web service
+
+1. **New → Web Service**, connect the repo, runtime = **Docker**
+   (Render auto-detects the `Dockerfile`).
+2. **New → PostgreSQL** (free tier is fine) to get a managed database —
+   copy its **Internal Database URL**.
+3. On the web service, set these environment variables:
+
+   | Key | Value |
+   |---|---|
+   | `SPRING_PROFILES_ACTIVE` | `e2e` (real JWT auth + demo seed data) or `prod` (real JWT auth, no seed data) |
+   | `DATABASE_URL` | the Postgres **Internal Database URL** Render gives you (`postgres://user:pass@host:port/db` form) |
+   | `APP_JWT_SECRET` | a random 32+ byte string — use Render's "Generate" button |
+   | `APP_CORS_ALLOWED_ORIGINS` | your frontend's deployed origin, e.g. `https://erp-frontend.onrender.com` |
+
+   `DATABASE_URL` doesn't need to be split into JDBC url/username/password —
+   [`RenderDatabaseUrlConverter`](src/main/java/com/pm/erp/common/config/RenderDatabaseUrlConverter.java)
+   converts it into `spring.datasource.{url,username,password}` at startup.
+   If you'd rather set the JDBC datasource explicitly instead, use
+   `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` —
+   those take precedence over `DATABASE_URL` when present.
+
+4. Health check path: `/actuator/health` (already public in every profile).
+5. Deploy. Render builds the Docker image and starts the container with
+   `PORT` set — the app reads `${PORT:8081}` for `server.port`, so no change
+   needed there.
+
+**Notes**
+
+- The free Postgres plan expires after 90 days and the free web service
+  spins down on idle (cold start ~30–60s on the next request) — fine for a
+  demo, not for anything real.
+- Use `e2e` (not `prod`) if you want the demo login users
+  (`admin`/`admin123`, etc.) available on the deployed instance; `prod`
+  skips seeding entirely, so you'd need to insert a school + user manually
+  via SQL before anyone can log in.

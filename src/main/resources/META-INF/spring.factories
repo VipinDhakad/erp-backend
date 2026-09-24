@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.pm.erp.common.config.RenderDatabaseUrlConverter
