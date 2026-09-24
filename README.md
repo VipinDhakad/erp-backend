@@ -60,7 +60,7 @@ Each feature package generally has `api/` (controllers + DTOs), `domain/`
 | `analytics/*` | Read-only computed dashboards (per-student and school-wide) | Adding a new analytics metric/chart |
 | `common/error` | `ApiError` response shape, exception types (`NotFoundException`, `ConflictException`), `GlobalExceptionHandler` | Adding a new error type or changing the error response format |
 | `common/tenant` | `SchoolContext` — reads the current user's `schoolId` from the security context | Any code that needs to scope a query by school (multi-tenancy is schema-ready but not yet enforced everywhere) |
-| `common/config` | `OpenApiConfig` (Swagger metadata + security scheme), `RenderDatabaseUrlConverter` (adapts a PaaS `DATABASE_URL` into Spring's datasource properties) | Changing API docs title/description/auth scheme, or how the app picks up its DB connection on a new host |
+| `common/config` | `OpenApiConfig` — Swagger metadata + security scheme | Changing API docs title/description or the auth scheme shown in Swagger |
 | `common/logging` | `RequestLoggingFilter` — logs every request/response with status + duration | Changing what gets logged per-request |
 | `common/audit` | `BaseEntity` — shared `createdAt`/`updatedAt` base class | Adding a new auditable field to all entities |
 | `src/main/resources/db/migration` | Flyway schema migrations (`V1__schema.sql`, `V2__assignments_attendance.sql`) | **Any** schema change — add a new `V{n}__description.sql`, never edit an already-applied one |
@@ -137,11 +137,12 @@ free-tier managed Postgres plus the web service in one shot.
    | `APP_CORS_ALLOWED_ORIGINS` | your frontend's deployed origin, e.g. `https://erp-frontend.onrender.com` |
 
    `DATABASE_URL` doesn't need to be split into JDBC url/username/password —
-   [`RenderDatabaseUrlConverter`](src/main/java/com/pm/erp/common/config/RenderDatabaseUrlConverter.java)
-   converts it into `spring.datasource.{url,username,password}` at startup.
-   If you'd rather set the JDBC datasource explicitly instead, use
-   `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` —
-   those take precedence over `DATABASE_URL` when present.
+   [`ErpApplication.applyRenderDatabaseUrl`](src/main/java/com/pm/erp/ErpApplication.java)
+   converts it into `spring.datasource.{url,username,password}` system
+   properties before Spring starts. If you'd rather set the JDBC datasource
+   explicitly instead, use `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` /
+   `SPRING_DATASOURCE_PASSWORD` — `SPRING_DATASOURCE_URL` being present skips
+   the `DATABASE_URL` conversion entirely.
 
 4. Health check path: `/actuator/health` (already public in every profile).
 5. Deploy. Render builds the Docker image and starts the container with
@@ -153,7 +154,29 @@ free-tier managed Postgres plus the web service in one shot.
 - The free Postgres plan expires after 90 days and the free web service
   spins down on idle (cold start ~30–60s on the next request) — fine for a
   demo, not for anything real.
-- Use `e2e` (not `prod`) if you want the demo login users
-  (`admin`/`admin123`, etc.) available on the deployed instance; `prod`
-  skips seeding entirely, so you'd need to insert a school + user manually
-  via SQL before anyone can log in.
+- `render.yaml` defaults to `SPRING_PROFILES_ACTIVE=prod`, which skips demo
+  seeding entirely — there's no school, no users, nothing to log in as until
+  you create one. Connect to the deployed Postgres (Render dashboard →
+  your database → **Connect** → copy the external connection command) and
+  run:
+
+  ```sql
+  INSERT INTO school (name, code, address, phone, principal_name)
+  VALUES ('My School', 'SCH-001', 'Address', '+1-000-000-0000', 'Principal Name');
+
+  -- bcrypt hash of 'admin123' — change the password after first login
+  INSERT INTO app_user (school_id, username, password_hash, enabled, role_id)
+  VALUES ((SELECT id FROM school WHERE code = 'SCH-001'),
+          'admin',
+          '$2a$10$ov9sr.sHUZ2tJSDvpkXOMuBY4UpuPLhdxjIBC9Du.fTWBmBmATNYS',
+          TRUE,
+          (SELECT id FROM role WHERE name = 'ADMIN'));
+  ```
+
+  Then log in as `admin` / `admin123` via `POST /auth/login` and change the
+  password (there's no change-password endpoint yet — either add one or
+  update `password_hash` directly with a fresh bcrypt hash).
+- Use `e2e` instead of `prod` in `render.yaml` if you'd rather have the demo
+  login users (`admin`/`admin123`, `teacher1`/`teacher123`, `teacher2`/`teacher123`)
+  and sample data pre-loaded on the deployed instance — fine for a demo,
+  not for real data.
