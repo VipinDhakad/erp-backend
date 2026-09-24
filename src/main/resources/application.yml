@@ -1,0 +1,101 @@
+spring:
+  application:
+    name: ERP
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  datasource:
+    url: jdbc:postgresql://localhost:5432/erp
+    username: erp
+    password: erp
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+server:
+  port: 8081
+
+app:
+  cors:
+    allowed-origins: http://localhost:4200
+  jwt:
+    secret: ${APP_JWT_SECRET:dev-only-secret-please-change-this-to-a-real-64-byte-value-xxxxxxxxxxxxxxxxxxxxx}
+    issuer: erp-backend
+    access-token-ttl-seconds: 28800
+
+logging:
+  level:
+    root: INFO
+    com.pm.erp: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+
+---
+# LOCAL — developer machine. NO AUTH required. Demo seed loaded so endpoints return real data.
+spring:
+  config:
+    activate:
+      on-profile: local
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+  jpa:
+    show-sql: false
+app:
+  security:
+    mode: disabled
+    local-user:
+      user-id: 1
+      username: local-admin
+      role: ADMIN
+      school-id: 1
+logging:
+  level:
+    com.pm.erp: DEBUG
+
+---
+# E2E — integration/staging. Real JWT auth required. Demo seed loaded so testers have users to log in with.
+spring:
+  config:
+    activate:
+      on-profile: e2e
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+app:
+  security:
+    mode: enabled
+logging:
+  level:
+    com.pm.erp: INFO
+    org.springframework.security: INFO
+
+---
+# PROD — production. Real JWT auth required. NO demo seed. JWT secret MUST come from env var APP_JWT_SECRET.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  flyway:
+    locations: classpath:db/migration
+app:
+  security:
+    mode: enabled
+  jwt:
+    # Override required via env. The default below is intentionally rejected at startup if used in prod (see JwtService validation).
+    secret: ${APP_JWT_SECRET}
+logging:
+  level:
+    root: INFO
+    com.pm.erp: INFO
+    org.springframework.security: WARN

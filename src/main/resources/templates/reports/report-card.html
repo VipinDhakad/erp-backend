@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${school.name} + ' - Report Card'">Report Card</title>
+    <style>
+        @page { size: A4; margin: 18mm 16mm; }
+        body { font-family: "Helvetica", Arial, sans-serif; color: #1F2430; font-size: 11pt; }
+        .header { border-bottom: 2px solid #2D5F8B; padding-bottom: 8px; margin-bottom: 14px; }
+        .school-name { font-size: 18pt; font-weight: bold; color: #2D5F8B; margin: 0; }
+        .school-meta { font-size: 9pt; color: #5B6373; margin: 2px 0; }
+        .title { text-align: center; font-size: 14pt; font-weight: bold; margin: 14px 0 4px 0; letter-spacing: 1px; }
+        .subtitle { text-align: center; font-size: 10pt; color: #5B6373; margin-bottom: 14px; }
+        table.info { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        table.info td { padding: 4px 6px; font-size: 10pt; }
+        table.info .label { color: #5B6373; width: 22%; }
+        table.marks { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        table.marks th, table.marks td { border: 1px solid #E1E4EA; padding: 6px 8px; font-size: 10pt; }
+        table.marks th { background-color: #F2F4F8; text-align: left; font-weight: bold; color: #1F2430; }
+        table.marks td.num { text-align: right; }
+        .totals { margin-top: 10px; font-size: 10pt; }
+        .totals .row { padding: 4px 0; }
+        .totals .label { color: #5B6373; display: inline-block; width: 160px; }
+        .totals .value { font-weight: bold; }
+        .signatures { margin-top: 40px; width: 100%; }
+        .signatures td { width: 33%; text-align: center; padding-top: 30px; border-top: 1px solid #1F2430; font-size: 9pt; color: #5B6373; }
+        .footer { margin-top: 20px; font-size: 8pt; color: #9AA0AC; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <p class="school-name" th:text="${school.name}">School Name</p>
+    <p class="school-meta" th:text="${school.address}">Address</p>
+    <p class="school-meta" th:text="'Phone: ' + ${school.phone}">Phone</p>
+</div>
+
+<div class="title">REPORT CARD</div>
+<div class="subtitle">
+    <span th:text="${exam.name}">Mid-Term</span> &nbsp;&middot;&nbsp;
+    Academic Year <span th:text="${exam.academicYearName}">2026-27</span>
+</div>
+
+<table class="info">
+    <tr>
+        <td class="label">Student Name</td>
+        <td th:text="${student.firstName} + ' ' + ${student.lastName}">Name</td>
+        <td class="label">Admission No.</td>
+        <td th:text="${student.admissionNo}">A-001</td>
+    </tr>
+    <tr>
+        <td class="label">Class &amp; Section</td>
+        <td th:text="${student.className} + ' - ' + ${student.sectionName}">Class 8 - A</td>
+        <td class="label">Roll No.</td>
+        <td th:text="${student.rollNo}">12</td>
+    </tr>
+    <tr>
+        <td class="label">Date of Birth</td>
+        <td th:text="${student.dob}">DOB</td>
+        <td class="label">Gender</td>
+        <td th:text="${student.gender}">—</td>
+    </tr>
+</table>
+
+<table class="marks">
+    <thead>
+    <tr>
+        <th>Subject</th>
+        <th>Code</th>
+        <th class="num">Max Marks</th>
+        <th class="num">Marks Obtained</th>
+        <th class="num">Percentage</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${rows}">
+        <td th:text="${row.subjectName}">Subject</td>
+        <td th:text="${row.subjectCode}">CODE</td>
+        <td class="num" th:text="${row.maxMarks}">100</td>
+        <td class="num" th:text="${row.marksObtained}">85</td>
+        <td class="num" th:text="${row.percentage} + ' %'">85.00 %</td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(rows)}">
+        <td colspan="5" style="text-align:center; color:#5B6373;">No marks entered yet.</td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="totals">
+    <div class="row">
+        <span class="label">Total Marks:</span>
+        <span class="value" th:text="${totalObtained} + ' / ' + ${totalMax}">0 / 0</span>
+    </div>
+    <div class="row">
+        <span class="label">Overall Percentage:</span>
+        <span class="value" th:text="${overallPercentage} + ' %'">0 %</span>
+    </div>
+    <div class="row">
+        <span class="label">Grade:</span>
+        <span class="value" th:text="${grade}">A1</span>
+    </div>
+    <div class="row">
+        <span class="label">Issued On:</span>
+        <span class="value" th:text="${issuedOn}">2026-05-12</span>
+    </div>
+</div>
+
+<table class="signatures">
+    <tr>
+        <td>Class Teacher</td>
+        <td>Principal</td>
+        <td>Parent / Guardian</td>
+    </tr>
+</table>
+
+<div class="footer">
+    Computer-generated report card. Please verify all entries with the school office.
+</div>
+
+</body>
+</html>
