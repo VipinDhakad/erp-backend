@@ -7,6 +7,10 @@ import com.pm.erp.reports.service.ReportCardService;
 import com.pm.erp.students.domain.Student;
 import com.pm.erp.students.domain.StudentRepository;
 import com.pm.erp.teachers.domain.TeacherRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Report Cards", description = "Per-student, per-exam report card rendering (PDF and the underlying data)")
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
@@ -28,6 +33,11 @@ public class ReportCardController {
     private final TeacherAssignmentService assignmentService;
     private final TeacherRepository teacherRepo;
 
+    @Operation(
+            summary = "Render report card PDF",
+            description = "Generates and returns the report card as a PDF for inline viewing."
+    )
+    @ApiResponse(responseCode = "200", description = "PDF report card", content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE))
     @GetMapping("/student/{studentId}/exam/{examId}")
     public ResponseEntity<byte[]> render(
             @PathVariable Long studentId, @PathVariable Long examId,
@@ -42,6 +52,7 @@ public class ReportCardController {
                 .body(pdf);
     }
 
+    @Operation(summary = "Get report card data", description = "The same computed report card as JSON, for rendering client-side instead of the PDF.")
     @GetMapping("/student/{studentId}/exam/{examId}/data")
     public ReportCardDto.ReportCardResponse data(
             @PathVariable Long studentId, @PathVariable Long examId,

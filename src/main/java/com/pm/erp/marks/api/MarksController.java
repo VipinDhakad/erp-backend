@@ -6,6 +6,9 @@ import com.pm.erp.common.error.NotFoundException;
 import com.pm.erp.marks.service.ExamService;
 import com.pm.erp.marks.service.MarksService;
 import com.pm.erp.teachers.domain.TeacherRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Exams & Marks", description = "Exam definitions and per-student marks entry. ADMIN has full access; TEACHER is restricted to sections/subjects they're assigned to.")
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -26,11 +30,13 @@ public class MarksController {
     private final TeacherAssignmentService assignmentService;
     private final TeacherRepository teacherRepo;
 
+    @Operation(summary = "List exams")
     @GetMapping("/exams")
     public List<MarksDto.ExamResponse> listExams() {
         return examService.list();
     }
 
+    @Operation(summary = "Create an exam", description = "ADMIN only.")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/exams")
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,17 +44,19 @@ public class MarksController {
         return examService.create(req);
     }
 
+    @Operation(summary = "List marks for an exam/section/subject")
     @GetMapping("/marks")
     public List<MarksDto.MarkRowResponse> listMarks(
-            @RequestParam Long examId,
-            @RequestParam Long sectionId,
-            @RequestParam Long subjectId,
+            @Parameter(description = "Exam id") @RequestParam Long examId,
+            @Parameter(description = "Section id") @RequestParam Long sectionId,
+            @Parameter(description = "Subject id") @RequestParam Long subjectId,
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
         requireSectionSubjectAccess(user, sectionId, subjectId);
         return marksService.list(examId, sectionId, subjectId);
     }
 
+    @Operation(summary = "Bulk enter marks", description = "Upserts one mark entry per student for a given exam + section + subject.")
     @PostMapping("/marks/bulk")
     public MarksDto.BulkMarksResponse bulk(
             @RequestBody @Valid MarksDto.BulkMarksRequest req,

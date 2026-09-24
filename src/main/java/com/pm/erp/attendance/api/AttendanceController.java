@@ -5,6 +5,9 @@ import com.pm.erp.auth.security.AuthenticatedUser;
 import com.pm.erp.attendance.service.AttendanceService;
 import com.pm.erp.common.error.NotFoundException;
 import com.pm.erp.teachers.domain.TeacherRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Attendance", description = "Daily per-section attendance. ADMIN has full access; TEACHER is restricted to their assigned sections.")
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
@@ -23,16 +27,18 @@ public class AttendanceController {
     private final TeacherAssignmentService assignmentService;
     private final TeacherRepository teacherRepo;
 
+    @Operation(summary = "List attendance for a section on a date")
     @GetMapping
     public List<AttendanceDto.AttendanceRowResponse> list(
-            @RequestParam Long sectionId,
-            @RequestParam LocalDate date,
+            @Parameter(description = "Section id") @RequestParam Long sectionId,
+            @Parameter(description = "Date to fetch attendance for (ISO yyyy-MM-dd)") @RequestParam LocalDate date,
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
         requireSectionAccess(user, sectionId);
         return service.list(sectionId, date);
     }
 
+    @Operation(summary = "Bulk mark attendance", description = "Upserts one attendance status per student for a given section + date.")
     @PostMapping("/bulk")
     public AttendanceDto.BulkAttendanceResponse bulk(
             @RequestBody @Valid AttendanceDto.BulkAttendanceRequest req,
@@ -42,10 +48,11 @@ public class AttendanceController {
         return service.bulkUpsert(req);
     }
 
+    @Operation(summary = "Attendance trend", description = "Daily present-percentage for a section over the last N days.")
     @GetMapping("/trend")
     public List<AttendanceDto.DayAttendance> trend(
-            @RequestParam Long sectionId,
-            @RequestParam(defaultValue = "14") int days,
+            @Parameter(description = "Section id") @RequestParam Long sectionId,
+            @Parameter(description = "Number of trailing days to include") @RequestParam(defaultValue = "14") int days,
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
         requireSectionAccess(user, sectionId);
