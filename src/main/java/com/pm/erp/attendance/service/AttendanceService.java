@@ -3,6 +3,7 @@ package com.pm.erp.attendance.service;
 import com.pm.erp.attendance.api.AttendanceDto;
 import com.pm.erp.attendance.domain.AttendanceRecord;
 import com.pm.erp.attendance.domain.AttendanceRecordRepository;
+import com.pm.erp.common.error.ConflictException;
 import com.pm.erp.common.tenant.SchoolContext;
 import com.pm.erp.students.domain.Student;
 import com.pm.erp.students.domain.StudentRepository;
@@ -42,6 +43,11 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceDto.BulkAttendanceResponse bulkUpsert(AttendanceDto.BulkAttendanceRequest req) {
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        if (req.date().isBefore(yesterday) || req.date().isAfter(today)) {
+            throw new ConflictException("Attendance can only be marked or changed for today or yesterday");
+        }
         Long userId = schoolContext.currentUser().userId();
         int upserted = 0;
         for (var entry : req.entries()) {

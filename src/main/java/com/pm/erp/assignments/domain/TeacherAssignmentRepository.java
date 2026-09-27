@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssignment, Long> {
     List<TeacherAssignment> findByTeacherId(Long teacherId);
     List<TeacherAssignment> findAllByOrderBySectionIdAsc();
+    List<TeacherAssignment> findBySectionIdInAndClassTeacherTrue(List<Long> sectionIds);
     Optional<TeacherAssignment> findByTeacherIdAndSectionIdAndSubjectId(Long teacherId, Long sectionId, Long subjectId);
     boolean existsByTeacherIdAndSectionIdAndSubjectId(Long teacherId, Long sectionId, Long subjectId);
 }

@@ -98,11 +98,14 @@ CROSS JOIN (VALUES
 ) AS v(admission_no, first_name, last_name, dob, gender, roll_no)
 WHERE c.name = 'Class 8' AND sec.name = 'B';
 
--- One exam in current academic year.
-INSERT INTO exam (school_id, academic_year_id, name, start_date, end_date)
+-- One exam in current academic year, for Class 8.
+INSERT INTO exam (school_id, academic_year_id, class_id, max_marks, name, start_date, end_date)
 VALUES ((SELECT id FROM school WHERE code = 'SPS-001'),
         (SELECT id FROM academic_year WHERE is_current = TRUE
             AND school_id = (SELECT id FROM school WHERE code = 'SPS-001')),
+        (SELECT id FROM class WHERE name = 'Class 8'
+            AND school_id = (SELECT id FROM school WHERE code = 'SPS-001')),
+        100,
         'Unit Test 1', DATE '2026-07-15', DATE '2026-07-22');
 
 -- Teacher assignments: teacher1 (Meera Sharma) is the class teacher of Class 8 - A

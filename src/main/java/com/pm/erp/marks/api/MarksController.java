@@ -35,7 +35,9 @@ public class MarksController {
               "name": "Unit Test 1",
               "startDate": "2026-07-15",
               "endDate": "2026-07-22",
-              "academicYearId": 1
+              "academicYearId": 1,
+              "classId": 3,
+              "maxMarks": 100
             }
             """;
 
@@ -44,13 +46,15 @@ public class MarksController {
     private final TeacherAssignmentService assignmentService;
     private final TeacherRepository teacherRepo;
 
-    @Operation(summary = "List exams")
+    @Operation(summary = "List exams", description = "Optionally filter to exams for a specific class.")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
             value = "[" + EXAM_EXAMPLE + "]"
     )))
     @GetMapping("/exams")
-    public List<MarksDto.ExamResponse> listExams() {
-        return examService.list();
+    public List<MarksDto.ExamResponse> listExams(
+            @Parameter(description = "Filter to exams for this class only") @RequestParam(required = false) Long classId
+    ) {
+        return examService.list(classId);
     }
 
     @Operation(summary = "Create an exam", description = "ADMIN only.")

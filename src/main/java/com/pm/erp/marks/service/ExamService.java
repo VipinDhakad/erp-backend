@@ -21,9 +21,12 @@ public class ExamService {
     private final SchoolContext schoolContext;
 
     @Transactional(readOnly = true)
-    public List<MarksDto.ExamResponse> list() {
+    public List<MarksDto.ExamResponse> list(Long classId) {
         Long schoolId = schoolContext.currentSchoolId();
-        return repo.findBySchoolIdOrderByStartDateDescIdDesc(schoolId).stream().map(this::toDto).toList();
+        List<Exam> exams = classId == null
+                ? repo.findBySchoolIdOrderByStartDateDescIdDesc(schoolId)
+                : repo.findBySchoolIdAndClassIdOrderByStartDateDescIdDesc(schoolId, classId);
+        return exams.stream().map(this::toDto).toList();
     }
 
     @Transactional
@@ -32,6 +35,8 @@ public class ExamService {
         Exam e = Exam.builder()
                 .schoolId(schoolId)
                 .academicYearId(req.academicYearId())
+                .classId(req.classId())
+                .maxMarks(req.maxMarks())
                 .name(req.name())
                 .startDate(req.startDate())
                 .endDate(req.endDate())
@@ -46,6 +51,9 @@ public class ExamService {
     }
 
     private MarksDto.ExamResponse toDto(Exam e) {
-        return new MarksDto.ExamResponse(e.getId(), e.getName(), e.getStartDate(), e.getEndDate(), e.getAcademicYearId());
+        return new MarksDto.ExamResponse(
+                e.getId(), e.getName(), e.getStartDate(), e.getEndDate(),
+                e.getAcademicYearId(), e.getClassId(), e.getMaxMarks()
+        );
     }
 }

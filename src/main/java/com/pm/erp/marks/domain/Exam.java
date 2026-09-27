@@ -25,6 +25,12 @@ public class Exam extends BaseEntity {
     @Column(name = "academic_year_id", nullable = false)
     private Long academicYearId;
 
+    @Column(name = "class_id", nullable = false)
+    private Long classId;
+
+    @Column(name = "max_marks", nullable = false)
+    private int maxMarks;
+
     @Column(nullable = false)
     private String name;
 

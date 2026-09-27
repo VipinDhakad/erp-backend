@@ -9,7 +9,7 @@ public final class AcademicsDto {
 
     private AcademicsDto() {}
 
-    public record ClassResponse(Long id, String name, int displayOrder) {}
+    public record ClassResponse(Long id, String name, String classTeacherName, long studentCount) {}
 
     public record ClassRequest(
             @NotBlank @Size(max = 64) String name,

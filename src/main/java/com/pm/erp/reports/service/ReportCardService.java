@@ -177,7 +177,7 @@ public class ReportCardService {
         return new ReportCardDto.ReportCardResponse(
                 new StudentDto.StudentResponse(student.getId(), student.getSectionId(), student.getAdmissionNo(),
                         student.getFirstName(), student.getLastName(), student.getDob(), student.getGender(), student.getRollNo()),
-                new MarksDto.ExamResponse(exam.getId(), exam.getName(), exam.getStartDate(), exam.getEndDate(), exam.getAcademicYearId()),
+                new MarksDto.ExamResponse(exam.getId(), exam.getName(), exam.getStartDate(), exam.getEndDate(), exam.getAcademicYearId(), exam.getClassId(), exam.getMaxMarks()),
                 schoolClass.getName(),
                 section.getName(),
                 school.getName(),

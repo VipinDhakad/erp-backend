@@ -7,5 +7,6 @@ import java.util.List;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findBySectionIdOrderByRollNoAsc(Long sectionId);
     List<Student> findBySchoolIdOrderByLastNameAscFirstNameAsc(Long schoolId);
+    long countBySectionIdIn(List<Long> sectionIds);
     boolean existsBySchoolIdAndAdmissionNoIgnoreCase(Long schoolId, String admissionNo);
 }

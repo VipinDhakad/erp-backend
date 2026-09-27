@@ -11,11 +11,16 @@ public final class MarksDto {
 
     private MarksDto() {}
 
-    public record ExamResponse(Long id, String name, LocalDate startDate, LocalDate endDate, Long academicYearId) {}
+    public record ExamResponse(
+            Long id, String name, LocalDate startDate, LocalDate endDate,
+            Long academicYearId, Long classId, int maxMarks
+    ) {}
 
     public record ExamRequest(
             @NotBlank @Size(max = 120) String name,
             @NotNull Long academicYearId,
+            @NotNull Long classId,
+            @Min(1) @Max(1000) int maxMarks,
             LocalDate startDate,
             LocalDate endDate
     ) {}

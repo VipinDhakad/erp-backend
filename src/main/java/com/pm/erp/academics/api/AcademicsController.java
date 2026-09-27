@@ -26,7 +26,8 @@ public class AcademicsController {
             {
               "id": 3,
               "name": "Class 8",
-              "displayOrder": 8
+              "classTeacherName": "Meera Sharma",
+              "studentCount": 25
             }
             """;
     private static final String SECTION_EXAMPLE = """
@@ -60,13 +61,13 @@ public class AcademicsController {
     private final SubjectService subjectService;
     private final AcademicYearService yearService;
 
-    @Operation(summary = "List classes", description = "e.g. Grade 1, Grade 2 — the top-level grouping above sections.")
+    @Operation(summary = "List classes", description = "e.g. Grade 1, Grade 2 — the top-level grouping above sections. Each entry includes its class teacher's name (if any section in the class has one assigned) and total student count across all its sections.")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
             value = """
                     [
-                      { "id": 1, "name": "Class 6", "displayOrder": 6 },
-                      { "id": 2, "name": "Class 7", "displayOrder": 7 },
-                      { "id": 3, "name": "Class 8", "displayOrder": 8 }
+                      { "id": 1, "name": "Class 6", "classTeacherName": null, "studentCount": 40 },
+                      { "id": 2, "name": "Class 7", "classTeacherName": "Rajesh Kulkarni", "studentCount": 38 },
+                      { "id": 3, "name": "Class 8", "classTeacherName": "Meera Sharma", "studentCount": 50 }
                     ]
                     """
     )))
@@ -115,7 +116,7 @@ public class AcademicsController {
         return sectionService.create(req);
     }
 
-    @Operation(summary = "List subjects")
+    @Operation(summary = "List subjects", description = "Optionally filter to subjects assigned to a specific class.")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
             value = """
                     [
@@ -125,8 +126,10 @@ public class AcademicsController {
                     """
     )))
     @GetMapping("/subjects")
-    public List<AcademicsDto.SubjectResponse> listSubjects() {
-        return subjectService.list();
+    public List<AcademicsDto.SubjectResponse> listSubjects(
+            @Parameter(description = "Filter to subjects assigned to this class only") @RequestParam(required = false) Long classId
+    ) {
+        return subjectService.list(classId);
     }
 
     @Operation(summary = "Create a subject", description = "ADMIN only.")

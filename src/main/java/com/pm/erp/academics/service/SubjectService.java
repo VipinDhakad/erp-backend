@@ -1,6 +1,7 @@
 package com.pm.erp.academics.service;
 
 import com.pm.erp.academics.api.AcademicsDto;
+import com.pm.erp.academics.domain.ClassSubjectRepository;
 import com.pm.erp.academics.domain.Subject;
 import com.pm.erp.academics.domain.SubjectRepository;
 import com.pm.erp.common.error.ConflictException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -19,12 +21,23 @@ import java.util.List;
 public class SubjectService {
 
     private final SubjectRepository repo;
+    private final ClassSubjectRepository classSubjectRepo;
     private final SchoolContext schoolContext;
 
     @Transactional(readOnly = true)
-    public List<AcademicsDto.SubjectResponse> list() {
+    public List<AcademicsDto.SubjectResponse> list(Long classId) {
         Long schoolId = schoolContext.currentSchoolId();
-        return repo.findBySchoolIdOrderByNameAsc(schoolId).stream().map(this::toDto).toList();
+        List<Subject> subjects = repo.findBySchoolIdOrderByNameAsc(schoolId);
+        if (classId == null) {
+            return subjects.stream().map(this::toDto).toList();
+        }
+        Set<Long> subjectIdsForClass = classSubjectRepo.findByClassId(classId).stream()
+                .map(com.pm.erp.academics.domain.ClassSubject::getSubjectId)
+                .collect(java.util.stream.Collectors.toSet());
+        return subjects.stream()
+                .filter(s -> subjectIdsForClass.contains(s.getId()))
+                .map(this::toDto)
+                .toList();
     }
 
     @Transactional

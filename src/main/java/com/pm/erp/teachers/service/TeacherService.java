@@ -77,4 +77,21 @@ public class TeacherService {
         return new TeacherDto.TeacherResponse(saved.getId(), saved.getFirstName(), saved.getLastName(),
                 saved.getEmployeeNo(), savedUser.getUsername());
     }
+
+    @Transactional
+    public TeacherDto.TeacherResponse update(Long id, TeacherDto.TeacherUpdateRequest req) {
+        Long schoolId = schoolContext.currentSchoolId();
+        Teacher teacher = teacherRepo.findById(id)
+                .filter(t -> t.getSchoolId().equals(schoolId))
+                .orElseThrow(() -> new NotFoundException("Teacher not found: " + id));
+        teacher.setFirstName(req.firstName());
+        teacher.setLastName(req.lastName());
+        teacher.setEmployeeNo(req.employeeNo());
+        Teacher saved = teacherRepo.save(teacher);
+        String username = saved.getUserId() == null ? null :
+                userRepo.findById(saved.getUserId()).map(AppUser::getUsername).orElse(null);
+        log.info("Updated teacher id={}", saved.getId());
+        return new TeacherDto.TeacherResponse(saved.getId(), saved.getFirstName(), saved.getLastName(),
+                saved.getEmployeeNo(), username);
+    }
 }

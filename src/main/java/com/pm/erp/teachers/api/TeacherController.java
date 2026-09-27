@@ -68,4 +68,12 @@ public class TeacherController {
     public TeacherDto.TeacherResponse create(@RequestBody @Valid TeacherDto.TeacherRequest req) {
         return service.create(req);
     }
+
+    @Operation(summary = "Update a teacher", description = "Updates name/employee number only — does not change username or password.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = TEACHER_EXAMPLE)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public TeacherDto.TeacherResponse update(@PathVariable Long id, @RequestBody @Valid TeacherDto.TeacherUpdateRequest req) {
+        return service.update(id, req);
+    }
 }

@@ -64,9 +64,25 @@ public class AttendanceController {
         return service.list(sectionId, date);
     }
 
-    @Operation(summary = "Bulk mark attendance", description = "Upserts one attendance status per student for a given section + date.")
+    @Operation(
+            summary = "Bulk mark attendance",
+            description = "Upserts one attendance status per student for a given section + date. " +
+                    "The date must be today or yesterday — attendance further in the past or in the future cannot be marked or changed."
+    )
     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
             value = "{ \"upserted\": 25 }"
+    )))
+    @ApiResponse(responseCode = "409", description = "Date is outside the allowed edit window", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    {
+                      "timestamp": "2026-09-27T09:30:00Z",
+                      "status": 409,
+                      "error": "Conflict",
+                      "message": "Attendance can only be marked or changed for today or yesterday",
+                      "path": "/api/attendance/bulk",
+                      "violations": []
+                    }
+                    """
     )))
     @PostMapping("/bulk")
     public AttendanceDto.BulkAttendanceResponse bulk(

@@ -22,4 +22,10 @@ public final class TeacherDto {
             @NotBlank @Size(max = 64) String username,
             @NotBlank @Size(min = 6, max = 128) String password
     ) {}
+
+    public record TeacherUpdateRequest(
+            @NotBlank @Size(max = 120) String firstName,
+            @NotBlank @Size(max = 120) String lastName,
+            @Size(max = 64) String employeeNo
+    ) {}
 }
