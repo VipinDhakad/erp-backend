@@ -30,7 +30,9 @@ public class ErpApplication {
         }
         URI uri = URI.create(databaseUrl);
         String[] userInfo = uri.getUserInfo() != null ? uri.getUserInfo().split(":", 2) : new String[0];
-        System.setProperty("spring.datasource.url", "jdbc:postgresql://" + uri.getHost() + ":" + uri.getPort() + uri.getPath());
+        int port = uri.getPort() != -1 ? uri.getPort() : 5432;
+        String query = uri.getQuery() != null ? "?" + uri.getQuery() : "";
+        System.setProperty("spring.datasource.url", "jdbc:postgresql://" + uri.getHost() + ":" + port + uri.getPath() + query);
         if (userInfo.length > 0) {
             System.setProperty("spring.datasource.username", userInfo[0]);
         }
