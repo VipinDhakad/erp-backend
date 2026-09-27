@@ -5,15 +5,21 @@ Spring Boot backend for a single-school ERP: students, teachers, academics
 and analytics. JWT-based auth with two roles, `ADMIN` and `TEACHER`.
 
 - Java 21, Spring Boot 4.0.6 (Spring Framework 7)
-- PostgreSQL, Flyway migrations
+- H2 (local) / PostgreSQL (e2e, prod), Flyway migrations
 - springdoc-openapi (Swagger UI) for interactive API docs
 
 ## Running locally
 
 ```bash
-docker compose up -d          # starts Postgres on localhost:5432
-./mvnw spring-boot:run        # profile defaults to "local" — auth disabled
+./mvnw spring-boot:run        # profile defaults to "local" — no Docker/Postgres needed
 ```
+
+`local` uses an in-memory H2 database configured in
+[`application-local.yml`](src/main/resources/application-local.yml) — nothing
+to install or start first. Data resets on every restart; the demo seed
+(below) re-populates it each time. `docker-compose.yml` is still there if you
+want to run against a real local Postgres instead — just set
+`SPRING_PROFILES_ACTIVE=e2e` and `docker compose up -d` first.
 
 App: `http://localhost:8081`
 Swagger UI: `http://localhost:8081/swagger-ui/index.html`
@@ -63,8 +69,10 @@ Each feature package generally has `api/` (controllers + DTOs), `domain/`
 | `common/config` | `OpenApiConfig` — Swagger metadata + security scheme | Changing API docs title/description or the auth scheme shown in Swagger |
 | `common/logging` | `RequestLoggingFilter` — logs every request/response with status + duration | Changing what gets logged per-request |
 | `common/audit` | `BaseEntity` — shared `createdAt`/`updatedAt` base class | Adding a new auditable field to all entities |
-| `src/main/resources/db/migration` | Flyway schema migrations (`V1__schema.sql`, `V2__assignments_attendance.sql`) | **Any** schema change — add a new `V{n}__description.sql`, never edit an already-applied one |
+| `src/main/resources/db/migration` | Flyway schema migrations for **Postgres** (`e2e`/`prod`) — `V1__schema.sql`, `V2__assignments_attendance.sql` | **Any** schema change — add a new `V{n}__description.sql`, never edit an already-applied one. Mirror the change into `db/migration-h2` too |
+| `src/main/resources/db/migration-h2` | The same migrations, adapted for **H2** (`local`) — `CITEXT`→`VARCHAR`, `TIMESTAMPTZ`→`TIMESTAMP` | Keep in lockstep with `db/migration` whenever that changes; H2 doesn't support every Postgres type/extension |
 | `src/main/resources/db/demo` | Demo/seed data (`V900__demo_seed.sql`), loaded on `local`/`e2e` only | Changing the sample school/users/data used for local dev and e2e testing |
+| `application-local.yml` | H2 datasource + Flyway location override for the `local` profile | Changing local DB config; this is what makes `local` need zero external services |
 | `src/main/resources/templates/reports` | Report card HTML template | Changing report card visual layout |
 | `pom.xml` | Dependencies, Java version, build plugins | Adding a library, bumping Spring Boot |
 | `docker-compose.yml` | Local Postgres container | Changing local DB port/credentials |

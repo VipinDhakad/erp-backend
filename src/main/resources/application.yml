@@ -43,28 +43,6 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
 
 ---
-# LOCAL — developer machine. NO AUTH required. Demo seed loaded so endpoints return real data.
-spring:
-  config:
-    activate:
-      on-profile: local
-  flyway:
-    locations: classpath:db/migration,classpath:db/demo
-  jpa:
-    show-sql: false
-app:
-  security:
-    mode: disabled
-    local-user:
-      user-id: 1
-      username: local-admin
-      role: ADMIN
-      school-id: 1
-logging:
-  level:
-    com.pm.erp: DEBUG
-
----
 # E2E — integration/staging. Real JWT auth required. Demo seed loaded so testers have users to log in with.
 spring:
   config:

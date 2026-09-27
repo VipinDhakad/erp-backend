@@ -1,0 +1,25 @@
+# LOCAL — developer machine. Auth disabled. In-memory H2 (no Docker/Postgres needed).
+# Data resets on every restart — the demo seed re-populates it each time.
+spring:
+  datasource:
+    url: jdbc:h2:mem:erp;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER,ROLE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    show-sql: false
+  flyway:
+    locations: classpath:db/migration-h2,classpath:db/demo
+
+app:
+  security:
+    mode: disabled
+    local-user:
+      user-id: 1
+      username: local-admin
+      role: ADMIN
+      school-id: 1
+
+logging:
+  level:
+    com.pm.erp: DEBUG
