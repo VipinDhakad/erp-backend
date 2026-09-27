@@ -8,10 +8,14 @@ import com.pm.erp.marks.service.MarksService;
 import com.pm.erp.teachers.domain.TeacherRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,18 +29,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MarksController {
 
+    private static final String EXAM_EXAMPLE = """
+            {
+              "id": 1,
+              "name": "Unit Test 1",
+              "startDate": "2026-07-15",
+              "endDate": "2026-07-22",
+              "academicYearId": 1
+            }
+            """;
+
     private final ExamService examService;
     private final MarksService marksService;
     private final TeacherAssignmentService assignmentService;
     private final TeacherRepository teacherRepo;
 
     @Operation(summary = "List exams")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = "[" + EXAM_EXAMPLE + "]"
+    )))
     @GetMapping("/exams")
     public List<MarksDto.ExamResponse> listExams() {
         return examService.list();
     }
 
     @Operation(summary = "Create an exam", description = "ADMIN only.")
+    @ApiResponse(responseCode = "201", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = EXAM_EXAMPLE)))
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/exams")
     @ResponseStatus(HttpStatus.CREATED)
@@ -45,6 +63,28 @@ public class MarksController {
     }
 
     @Operation(summary = "List marks for an exam/section/subject")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    [
+                      {
+                        "studentId": 1,
+                        "firstName": "Aarav",
+                        "lastName": "Sharma",
+                        "rollNo": 1,
+                        "marksObtained": 87.5,
+                        "maxMarks": 100
+                      },
+                      {
+                        "studentId": 2,
+                        "firstName": "Diya",
+                        "lastName": "Patel",
+                        "rollNo": 2,
+                        "marksObtained": 92.0,
+                        "maxMarks": 100
+                      }
+                    ]
+                    """
+    )))
     @GetMapping("/marks")
     public List<MarksDto.MarkRowResponse> listMarks(
             @Parameter(description = "Exam id") @RequestParam Long examId,
@@ -57,6 +97,9 @@ public class MarksController {
     }
 
     @Operation(summary = "Bulk enter marks", description = "Upserts one mark entry per student for a given exam + section + subject.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = "{ \"upserted\": 25 }"
+    )))
     @PostMapping("/marks/bulk")
     public MarksDto.BulkMarksResponse bulk(
             @RequestBody @Valid MarksDto.BulkMarksRequest req,

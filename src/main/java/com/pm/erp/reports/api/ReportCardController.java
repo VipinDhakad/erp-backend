@@ -9,6 +9,7 @@ import com.pm.erp.students.domain.StudentRepository;
 import com.pm.erp.teachers.domain.TeacherRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,45 @@ public class ReportCardController {
     }
 
     @Operation(summary = "Get report card data", description = "The same computed report card as JSON, for rendering client-side instead of the PDF.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    {
+                      "student": {
+                        "id": 1,
+                        "sectionId": 5,
+                        "admissionNo": "A-8A-001",
+                        "firstName": "Aarav",
+                        "lastName": "Sharma",
+                        "dob": "2011-04-15",
+                        "gender": "M",
+                        "rollNo": 1
+                      },
+                      "exam": {
+                        "id": 1,
+                        "name": "Unit Test 1",
+                        "startDate": "2026-07-15",
+                        "endDate": "2026-07-22",
+                        "academicYearId": 1
+                      },
+                      "className": "Class 8",
+                      "sectionName": "A",
+                      "schoolName": "Sunrise Public School",
+                      "academicYear": "2026-27",
+                      "rows": [
+                        { "subjectId": 3, "subjectName": "Mathematics", "maxMarks": 100, "marksObtained": 87.5, "grade": "A" },
+                        { "subjectId": 4, "subjectName": "Science", "maxMarks": 100, "marksObtained": 91.0, "grade": "A+" }
+                      ],
+                      "totalMarks": 178.5,
+                      "totalMaxMarks": 200,
+                      "percentage": 89.25,
+                      "overallGrade": "A",
+                      "attendancePercentage": 92.0,
+                      "remarks": "Excellent performance",
+                      "rankInSection": 2,
+                      "sectionSize": 25
+                    }
+                    """
+    )))
     @GetMapping("/student/{studentId}/exam/{examId}/data")
     public ReportCardDto.ReportCardResponse data(
             @PathVariable Long studentId, @PathVariable Long examId,

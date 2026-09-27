@@ -4,10 +4,14 @@ import com.pm.erp.assignments.service.TeacherAssignmentService;
 import com.pm.erp.auth.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +25,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TeacherAssignmentController {
 
+    private static final String ASSIGNMENT_EXAMPLE = """
+            {
+              "id": 1,
+              "teacherId": 1,
+              "sectionId": 5,
+              "subjectId": null,
+              "isClassTeacher": true
+            }
+            """;
+
     private final TeacherAssignmentService service;
 
     /**
@@ -32,6 +46,26 @@ public class TeacherAssignmentController {
             summary = "List teacher assignments",
             description = "ADMIN may list all assignments or filter by any username. TEACHER may only pass their own username."
     )
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    [
+                      {
+                        "id": 1,
+                        "teacherId": 1,
+                        "sectionId": 5,
+                        "subjectId": null,
+                        "isClassTeacher": true
+                      },
+                      {
+                        "id": 2,
+                        "teacherId": 2,
+                        "sectionId": 6,
+                        "subjectId": 3,
+                        "isClassTeacher": false
+                      }
+                    ]
+                    """
+    )))
     @GetMapping
     public List<AssignmentDto.TeacherAssignmentResponse> list(
             @Parameter(description = "Filter by teacher's login username") @RequestParam(required = false) String username,
@@ -48,6 +82,7 @@ public class TeacherAssignmentController {
     }
 
     @Operation(summary = "Assign a teacher to a section/subject", description = "ADMIN only.")
+    @ApiResponse(responseCode = "201", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = ASSIGNMENT_EXAMPLE)))
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

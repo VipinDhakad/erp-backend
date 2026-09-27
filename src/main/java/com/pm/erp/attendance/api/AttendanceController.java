@@ -7,9 +7,13 @@ import com.pm.erp.common.error.NotFoundException;
 import com.pm.erp.teachers.domain.TeacherRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +32,28 @@ public class AttendanceController {
     private final TeacherRepository teacherRepo;
 
     @Operation(summary = "List attendance for a section on a date")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    [
+                      {
+                        "studentId": 1,
+                        "firstName": "Aarav",
+                        "lastName": "Sharma",
+                        "rollNo": 1,
+                        "status": "PRESENT",
+                        "remark": null
+                      },
+                      {
+                        "studentId": 2,
+                        "firstName": "Diya",
+                        "lastName": "Patel",
+                        "rollNo": 2,
+                        "status": "ABSENT",
+                        "remark": "Sick leave"
+                      }
+                    ]
+                    """
+    )))
     @GetMapping
     public List<AttendanceDto.AttendanceRowResponse> list(
             @Parameter(description = "Section id") @RequestParam Long sectionId,
@@ -39,6 +65,9 @@ public class AttendanceController {
     }
 
     @Operation(summary = "Bulk mark attendance", description = "Upserts one attendance status per student for a given section + date.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = "{ \"upserted\": 25 }"
+    )))
     @PostMapping("/bulk")
     public AttendanceDto.BulkAttendanceResponse bulk(
             @RequestBody @Valid AttendanceDto.BulkAttendanceRequest req,
@@ -49,6 +78,14 @@ public class AttendanceController {
     }
 
     @Operation(summary = "Attendance trend", description = "Daily present-percentage for a section over the last N days.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    [
+                      { "date": "2026-09-25", "presentPct": 92.0 },
+                      { "date": "2026-09-26", "presentPct": 88.0 }
+                    ]
+                    """
+    )))
     @GetMapping("/trend")
     public List<AttendanceDto.DayAttendance> trend(
             @Parameter(description = "Section id") @RequestParam Long sectionId,

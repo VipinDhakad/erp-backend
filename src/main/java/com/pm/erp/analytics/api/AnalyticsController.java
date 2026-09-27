@@ -8,8 +8,12 @@ import com.pm.erp.students.domain.Student;
 import com.pm.erp.students.domain.StudentRepository;
 import com.pm.erp.teachers.domain.TeacherRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,6 +38,28 @@ public class AnalyticsController {
             description = "Overall %, attendance %, per-subject and per-exam breakdown, attendance trend, and section rank. " +
                     "ADMIN can view any student; TEACHER only students in a section they're assigned to."
     )
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    {
+                      "studentId": 1,
+                      "overallPercentage": 89.25,
+                      "attendancePercentage": 92.0,
+                      "bySubject": [
+                        { "subjectId": 3, "subjectName": "Mathematics", "percentage": 87.5, "grade": "A" },
+                        { "subjectId": 4, "subjectName": "Science", "percentage": 91.0, "grade": "A+" }
+                      ],
+                      "byExam": [
+                        { "examId": 1, "examName": "Unit Test 1", "percentage": 89.25 }
+                      ],
+                      "attendanceTrend": [
+                        { "month": "2026-08", "presentPct": 90.0 },
+                        { "month": "2026-09", "presentPct": 92.0 }
+                      ],
+                      "rankInSection": 2,
+                      "sectionSize": 25
+                    }
+                    """
+    )))
     @GetMapping("/students/{id}")
     public AnalyticsDto.StudentAnalyticsResponse forStudent(
             @PathVariable Long id,
@@ -55,6 +81,26 @@ public class AnalyticsController {
     }
 
     @Operation(summary = "School-wide overview", description = "Enrolment by class, average score by subject, attendance trend, gender distribution. ADMIN only.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
+            value = """
+                    {
+                      "enrolmentByClass": [
+                        { "className": "Class 6", "count": 40 },
+                        { "className": "Class 7", "count": 38 },
+                        { "className": "Class 8", "count": 50 }
+                      ],
+                      "avgScoreBySubject": [
+                        { "subjectName": "Mathematics", "avg": 78.4 },
+                        { "subjectName": "Science", "avg": 81.2 }
+                      ],
+                      "attendanceTrend": [
+                        { "month": "2026-08", "presentPct": 90.0 },
+                        { "month": "2026-09", "presentPct": 91.5 }
+                      ],
+                      "genderDistribution": { "male": 68, "female": 60, "other": 0 }
+                    }
+                    """
+    )))
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/school-overview")
     public AnalyticsDto.SchoolOverviewResponse schoolOverview() {
