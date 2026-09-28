@@ -12,8 +12,7 @@ public final class AcademicsDto {
     public record ClassResponse(Long id, String name, String classTeacherName, long studentCount) {}
 
     public record ClassRequest(
-            @NotBlank @Size(max = 64) String name,
-            @Min(0) @Max(1000) int displayOrder
+            @NotBlank @Size(max = 64) String name
     ) {}
 
     public record SectionResponse(Long id, Long classId, Long academicYearId, String name) {}

@@ -75,13 +75,15 @@ public class SchoolClassService {
         if (classRepo.existsBySchoolIdAndNameIgnoreCase(schoolId, req.name())) {
             throw new ConflictException("Class already exists with name: " + req.name());
         }
+        List<SchoolClass> existing = classRepo.findBySchoolIdOrderByDisplayOrderAsc(schoolId);
+        int nextDisplayOrder = existing.isEmpty() ? 10 : existing.get(existing.size() - 1).getDisplayOrder() + 10;
         SchoolClass c = SchoolClass.builder()
                 .schoolId(schoolId)
                 .name(req.name())
-                .displayOrder(req.displayOrder())
+                .displayOrder(nextDisplayOrder)
                 .build();
         SchoolClass saved = classRepo.save(c);
-        log.info("Created class id={} name={}", saved.getId(), saved.getName());
+        log.info("Created class id={} name={} displayOrder={}", saved.getId(), saved.getName(), saved.getDisplayOrder());
         return toDto(saved);
     }
 
