@@ -97,6 +97,14 @@ public class AcademicsController {
         return classService.create(req);
     }
 
+    @Operation(summary = "Update a class", description = "Rename an existing class. ADMIN only.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = CLASS_EXAMPLE)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/classes/{id}")
+    public AcademicsDto.ClassResponse updateClass(@PathVariable Long id, @RequestBody @Valid AcademicsDto.ClassUpdateRequest req) {
+        return classService.update(id, req);
+    }
+
     @Operation(summary = "Assign subjects to a class", description = "Replaces which subjects are taught in this class. ADMIN only.")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/classes/{id}/subjects")

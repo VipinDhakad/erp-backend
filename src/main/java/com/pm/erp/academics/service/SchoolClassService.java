@@ -88,6 +88,23 @@ public class SchoolClassService {
     }
 
     @Transactional
+    public AcademicsDto.ClassResponse update(Long classId, AcademicsDto.ClassUpdateRequest req) {
+        Long schoolId = schoolContext.currentSchoolId();
+        SchoolClass c = classRepo.findById(classId)
+                .orElseThrow(() -> new NotFoundException("Class not found: " + classId));
+        if (!c.getSchoolId().equals(schoolId)) {
+            throw new NotFoundException("Class not found: " + classId);
+        }
+        if (classRepo.existsBySchoolIdAndNameIgnoreCaseAndIdNot(schoolId, req.name(), classId)) {
+            throw new ConflictException("Class already exists with name: " + req.name());
+        }
+        c.setName(req.name());
+        SchoolClass saved = classRepo.save(c);
+        log.info("Updated class id={} name={}", saved.getId(), saved.getName());
+        return toDto(saved);
+    }
+
+    @Transactional
     public void assignSubjects(Long classId, AcademicsDto.AssignSubjectsRequest req) {
         SchoolClass schoolClass = classRepo.findById(classId)
                 .orElseThrow(() -> new NotFoundException("Class not found: " + classId));

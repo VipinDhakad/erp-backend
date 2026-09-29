@@ -15,6 +15,10 @@ public final class AcademicsDto {
             @NotBlank @Size(max = 64) String name
     ) {}
 
+    public record ClassUpdateRequest(
+            @NotBlank @Size(max = 64) String name
+    ) {}
+
     public record SectionResponse(Long id, Long classId, Long academicYearId, String name) {}
 
     public record SectionRequest(
