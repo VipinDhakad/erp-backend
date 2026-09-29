@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,11 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class AttendanceService {
+
+    // School's local timezone — "today"/"yesterday" for the attendance edit window must be
+    // computed here, not the server JVM's default zone, so it stays correct regardless of where
+    // the app is deployed.
+    private static final ZoneId SCHOOL_ZONE = ZoneId.of("Asia/Kolkata");
 
     private final AttendanceRecordRepository repo;
     private final StudentRepository studentRepo;
@@ -43,7 +49,7 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceDto.BulkAttendanceResponse bulkUpsert(AttendanceDto.BulkAttendanceRequest req) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(SCHOOL_ZONE);
         LocalDate yesterday = today.minusDays(1);
         if (req.date().isBefore(yesterday) || req.date().isAfter(today)) {
             throw new ConflictException("Attendance can only be marked or changed for today or yesterday");
@@ -74,7 +80,7 @@ public class AttendanceService {
 
     @Transactional(readOnly = true)
     public List<AttendanceDto.DayAttendance> sectionTrend(Long sectionId, int days) {
-        LocalDate to = LocalDate.now();
+        LocalDate to = LocalDate.now(SCHOOL_ZONE);
         LocalDate from = to.minusDays(Math.max(days - 1, 0));
         List<AttendanceRecord> records = repo.findBySectionIdAndDateBetweenOrderByDateAsc(sectionId, from, to);
         Map<LocalDate, List<AttendanceRecord>> byDate = new HashMap<>();
