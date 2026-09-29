@@ -41,4 +41,17 @@ public final class AcademicsDto {
     ) {}
 
     public record AssignSubjectsRequest(@NotNull List<@NotNull Long> subjectIds) {}
+
+    public record SchoolResponse(
+            Long id, String name, String code, String address, String phone,
+            String logoUrl, String principalName
+    ) {}
+
+    public record SchoolRequest(
+            @NotBlank @Size(max = 200) String name,
+            @Size(max = 500) String address,
+            @Size(max = 64) String phone,
+            @Size(max = 500) String logoUrl,
+            @Size(max = 200) String principalName
+    ) {}
 }

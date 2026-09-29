@@ -55,11 +55,23 @@ public class AcademicsController {
               "current": true
             }
             """;
+    private static final String SCHOOL_EXAMPLE = """
+            {
+              "id": 1,
+              "name": "Sunrise Public School",
+              "code": "SPS-001",
+              "address": "M.G. Road, Pune, Maharashtra 411001",
+              "phone": "+91-20-1234-5678",
+              "logoUrl": null,
+              "principalName": "Mrs. Sunita Verma"
+            }
+            """;
 
     private final SchoolClassService classService;
     private final SectionService sectionService;
     private final SubjectService subjectService;
     private final AcademicYearService yearService;
+    private final SchoolService schoolService;
 
     @Operation(summary = "List classes", description = "e.g. Grade 1, Grade 2 — the top-level grouping above sections. Each entry includes its class teacher's name (if any section in the class has one assigned) and total student count across all its sections.")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
@@ -157,5 +169,20 @@ public class AcademicsController {
     @ResponseStatus(HttpStatus.CREATED)
     public AcademicsDto.AcademicYearResponse createYear(@RequestBody @Valid AcademicsDto.AcademicYearRequest req) {
         return yearService.create(req);
+    }
+
+    @Operation(summary = "Get school details", description = "The caller's own school (tenant) — name, address, phone, principal, logo.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = SCHOOL_EXAMPLE)))
+    @GetMapping("/school")
+    public AcademicsDto.SchoolResponse getSchool() {
+        return schoolService.get();
+    }
+
+    @Operation(summary = "Update school details", description = "ADMIN only. The school's unique code cannot be changed via this endpoint.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = SCHOOL_EXAMPLE)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/school")
+    public AcademicsDto.SchoolResponse updateSchool(@RequestBody @Valid AcademicsDto.SchoolRequest req) {
+        return schoolService.update(req);
     }
 }
