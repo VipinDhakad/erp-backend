@@ -11,4 +11,5 @@ public interface MarkEntryRepository extends JpaRepository<MarkEntry, Long> {
     Optional<MarkEntry> findByStudentIdAndExamIdAndSubjectId(Long studentId, Long examId, Long subjectId);
     List<MarkEntry> findByStudentId(Long studentId);
     List<MarkEntry> findByStudentIdIn(List<Long> studentIds);
+    boolean existsByExamId(Long examId);
 }

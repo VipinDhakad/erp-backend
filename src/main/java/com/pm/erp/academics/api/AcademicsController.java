@@ -105,6 +105,15 @@ public class AcademicsController {
         return classService.update(id, req);
     }
 
+    @Operation(summary = "Delete a class", description = "ADMIN only. Fails if the class still has sections — remove those first.")
+    @ApiResponse(responseCode = "204")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/classes/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteClass(@PathVariable Long id) {
+        classService.delete(id);
+    }
+
     @Operation(summary = "Assign subjects to a class", description = "Replaces which subjects are taught in this class. ADMIN only.")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/classes/{id}/subjects")
@@ -161,6 +170,23 @@ public class AcademicsController {
         return subjectService.create(req);
     }
 
+    @Operation(summary = "Update a subject", description = "ADMIN only.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = SUBJECT_EXAMPLE)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/subjects/{id}")
+    public AcademicsDto.SubjectResponse updateSubject(@PathVariable Long id, @RequestBody @Valid AcademicsDto.SubjectUpdateRequest req) {
+        return subjectService.update(id, req);
+    }
+
+    @Operation(summary = "Delete a subject", description = "ADMIN only. Fails if the subject is still assigned to a class.")
+    @ApiResponse(responseCode = "204")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/subjects/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSubject(@PathVariable Long id) {
+        subjectService.delete(id);
+    }
+
     @Operation(summary = "List academic years")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
             value = "[" + YEAR_EXAMPLE + "]"
@@ -177,6 +203,23 @@ public class AcademicsController {
     @ResponseStatus(HttpStatus.CREATED)
     public AcademicsDto.AcademicYearResponse createYear(@RequestBody @Valid AcademicsDto.AcademicYearRequest req) {
         return yearService.create(req);
+    }
+
+    @Operation(summary = "Update an academic year", description = "ADMIN only.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = YEAR_EXAMPLE)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/academic-years/{id}")
+    public AcademicsDto.AcademicYearResponse updateYear(@PathVariable Long id, @RequestBody @Valid AcademicsDto.AcademicYearUpdateRequest req) {
+        return yearService.update(id, req);
+    }
+
+    @Operation(summary = "Delete an academic year", description = "ADMIN only. Fails if the academic year still has sections.")
+    @ApiResponse(responseCode = "204")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/academic-years/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteYear(@PathVariable Long id) {
+        yearService.delete(id);
     }
 
     @Operation(summary = "Get school details", description = "The caller's own school (tenant) — name, address, phone, principal, logo.")

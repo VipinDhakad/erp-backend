@@ -61,6 +61,36 @@ public class SubjectService {
         return repo.findById(id).orElseThrow(() -> new NotFoundException("Subject not found: " + id));
     }
 
+    @Transactional
+    public AcademicsDto.SubjectResponse update(Long id, AcademicsDto.SubjectUpdateRequest req) {
+        Long schoolId = schoolContext.currentSchoolId();
+        Subject s = repo.findById(id)
+                .filter(x -> x.getSchoolId().equals(schoolId))
+                .orElseThrow(() -> new NotFoundException("Subject not found: " + id));
+        if (!s.getCode().equalsIgnoreCase(req.code()) && repo.existsBySchoolIdAndCodeIgnoreCase(schoolId, req.code())) {
+            throw new ConflictException("Subject already exists with code: " + req.code());
+        }
+        s.setName(req.name());
+        s.setCode(req.code());
+        s.setMaxMarks(req.maxMarks());
+        Subject saved = repo.save(s);
+        log.info("Updated subject id={} code={}", saved.getId(), saved.getCode());
+        return toDto(saved);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Long schoolId = schoolContext.currentSchoolId();
+        Subject s = repo.findById(id)
+                .filter(x -> x.getSchoolId().equals(schoolId))
+                .orElseThrow(() -> new NotFoundException("Subject not found: " + id));
+        if (classSubjectRepo.existsBySubjectId(id)) {
+            throw new ConflictException("Cannot delete a subject still assigned to a class — unassign it first");
+        }
+        repo.delete(s);
+        log.info("Deleted subject id={}", id);
+    }
+
     private AcademicsDto.SubjectResponse toDto(Subject s) {
         return new AcademicsDto.SubjectResponse(s.getId(), s.getName(), s.getCode(), s.getMaxMarks());
     }

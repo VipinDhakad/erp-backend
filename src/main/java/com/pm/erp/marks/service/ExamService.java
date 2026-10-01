@@ -1,10 +1,12 @@
 package com.pm.erp.marks.service;
 
+import com.pm.erp.common.error.ConflictException;
 import com.pm.erp.common.error.NotFoundException;
 import com.pm.erp.common.tenant.SchoolContext;
 import com.pm.erp.marks.api.MarksDto;
 import com.pm.erp.marks.domain.Exam;
 import com.pm.erp.marks.domain.ExamRepository;
+import com.pm.erp.marks.domain.MarkEntryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.List;
 public class ExamService {
 
     private final ExamRepository repo;
+    private final MarkEntryRepository markEntryRepo;
     private final SchoolContext schoolContext;
 
     @Transactional(readOnly = true)
@@ -48,6 +51,36 @@ public class ExamService {
 
     public Exam get(Long id) {
         return repo.findById(id).orElseThrow(() -> new NotFoundException("Exam not found: " + id));
+    }
+
+    @Transactional
+    public MarksDto.ExamResponse update(Long id, MarksDto.ExamUpdateRequest req) {
+        Long schoolId = schoolContext.currentSchoolId();
+        Exam e = repo.findById(id)
+                .filter(x -> x.getSchoolId().equals(schoolId))
+                .orElseThrow(() -> new NotFoundException("Exam not found: " + id));
+        e.setName(req.name());
+        e.setAcademicYearId(req.academicYearId());
+        e.setClassId(req.classId());
+        e.setMaxMarks(req.maxMarks());
+        e.setStartDate(req.startDate());
+        e.setEndDate(req.endDate());
+        Exam saved = repo.save(e);
+        log.info("Updated exam id={} name={}", saved.getId(), saved.getName());
+        return toDto(saved);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Long schoolId = schoolContext.currentSchoolId();
+        Exam e = repo.findById(id)
+                .filter(x -> x.getSchoolId().equals(schoolId))
+                .orElseThrow(() -> new NotFoundException("Exam not found: " + id));
+        if (markEntryRepo.existsByExamId(id)) {
+            throw new ConflictException("Cannot delete an exam that already has marks entered");
+        }
+        repo.delete(e);
+        log.info("Deleted exam id={}", id);
     }
 
     private MarksDto.ExamResponse toDto(Exam e) {

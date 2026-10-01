@@ -105,6 +105,22 @@ public class SchoolClassService {
     }
 
     @Transactional
+    public void delete(Long classId) {
+        Long schoolId = schoolContext.currentSchoolId();
+        SchoolClass c = classRepo.findById(classId)
+                .orElseThrow(() -> new NotFoundException("Class not found: " + classId));
+        if (!c.getSchoolId().equals(schoolId)) {
+            throw new NotFoundException("Class not found: " + classId);
+        }
+        if (sectionRepo.existsByClassId(classId)) {
+            throw new ConflictException("Cannot delete a class that still has sections — remove its sections first");
+        }
+        classSubjectRepo.deleteByClassId(classId);
+        classRepo.delete(c);
+        log.info("Deleted class id={}", classId);
+    }
+
+    @Transactional
     public void assignSubjects(Long classId, AcademicsDto.AssignSubjectsRequest req) {
         SchoolClass schoolClass = classRepo.findById(classId)
                 .orElseThrow(() -> new NotFoundException("Class not found: " + classId));

@@ -35,9 +35,22 @@ public final class AcademicsDto {
             @Min(1) @Max(1000) int maxMarks
     ) {}
 
+    public record SubjectUpdateRequest(
+            @NotBlank @Size(max = 120) String name,
+            @NotBlank @Size(max = 32) String code,
+            @Min(1) @Max(1000) int maxMarks
+    ) {}
+
     public record AcademicYearResponse(Long id, String name, LocalDate startDate, LocalDate endDate, boolean current) {}
 
     public record AcademicYearRequest(
+            @NotBlank @Size(max = 32) String name,
+            @NotNull LocalDate startDate,
+            @NotNull LocalDate endDate,
+            boolean current
+    ) {}
+
+    public record AcademicYearUpdateRequest(
             @NotBlank @Size(max = 32) String name,
             @NotNull LocalDate startDate,
             @NotNull LocalDate endDate,

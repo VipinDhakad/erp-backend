@@ -1,5 +1,6 @@
 package com.pm.erp.teachers.service;
 
+import com.pm.erp.assignments.domain.TeacherAssignmentRepository;
 import com.pm.erp.auth.domain.AppUser;
 import com.pm.erp.auth.domain.AppUserRepository;
 import com.pm.erp.auth.domain.Role;
@@ -28,6 +29,7 @@ public class TeacherService {
     private final TeacherRepository teacherRepo;
     private final AppUserRepository userRepo;
     private final RoleRepository roleRepo;
+    private final TeacherAssignmentRepository assignmentRepo;
     private final PasswordEncoder passwordEncoder;
     private final SchoolContext schoolContext;
 
@@ -93,5 +95,27 @@ public class TeacherService {
         log.info("Updated teacher id={}", saved.getId());
         return new TeacherDto.TeacherResponse(saved.getId(), saved.getFirstName(), saved.getLastName(),
                 saved.getEmployeeNo(), username);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Long schoolId = schoolContext.currentSchoolId();
+        Teacher teacher = teacherRepo.findById(id)
+                .filter(t -> t.getSchoolId().equals(schoolId))
+                .orElseThrow(() -> new NotFoundException("Teacher not found: " + id));
+        if (assignmentRepo.existsByTeacherId(id)) {
+            throw new ConflictException("Cannot delete a teacher with active class/section assignments — unassign them first");
+        }
+        teacherRepo.delete(teacher);
+        // The login account isn't deleted (JwtAuthFilter resolves by userId on every
+        // request) — disabling it keeps the username reserved while cleanly blocking
+        // any future auth attempt from that teacher's credentials.
+        if (teacher.getUserId() != null) {
+            userRepo.findById(teacher.getUserId()).ifPresent(u -> {
+                u.setEnabled(false);
+                userRepo.save(u);
+            });
+        }
+        log.info("Deleted teacher id={}", id);
     }
 }

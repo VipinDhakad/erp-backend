@@ -66,6 +66,23 @@ public class MarksController {
         return examService.create(req);
     }
 
+    @Operation(summary = "Update an exam", description = "ADMIN only.")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(value = EXAM_EXAMPLE)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/exams/{id}")
+    public MarksDto.ExamResponse updateExam(@PathVariable Long id, @RequestBody @Valid MarksDto.ExamUpdateRequest req) {
+        return examService.update(id, req);
+    }
+
+    @Operation(summary = "Delete an exam", description = "ADMIN only. Fails if marks have already been entered for this exam.")
+    @ApiResponse(responseCode = "204")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/exams/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteExam(@PathVariable Long id) {
+        examService.delete(id);
+    }
+
     @Operation(summary = "List marks for an exam/section/subject")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, examples = @ExampleObject(
             value = """

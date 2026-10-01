@@ -25,6 +25,15 @@ public final class MarksDto {
             LocalDate endDate
     ) {}
 
+    public record ExamUpdateRequest(
+            @NotBlank @Size(max = 120) String name,
+            @NotNull Long academicYearId,
+            @NotNull Long classId,
+            @Min(1) @Max(1000) int maxMarks,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {}
+
     public record MarkRowResponse(
             Long studentId,
             String firstName,

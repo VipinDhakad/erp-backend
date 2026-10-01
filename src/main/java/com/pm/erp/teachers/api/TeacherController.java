@@ -76,4 +76,13 @@ public class TeacherController {
     public TeacherDto.TeacherResponse update(@PathVariable Long id, @RequestBody @Valid TeacherDto.TeacherUpdateRequest req) {
         return service.update(id, req);
     }
+
+    @Operation(summary = "Delete a teacher", description = "ADMIN only. Fails if the teacher still has active class/section assignments — unassign them first. Disables (does not delete) the backing login.")
+    @ApiResponse(responseCode = "204")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
+    }
 }

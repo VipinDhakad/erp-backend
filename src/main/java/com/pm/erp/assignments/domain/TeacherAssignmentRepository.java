@@ -11,4 +11,5 @@ public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssign
     List<TeacherAssignment> findBySectionIdInAndClassTeacherTrue(List<Long> sectionIds);
     Optional<TeacherAssignment> findByTeacherIdAndSectionIdAndSubjectId(Long teacherId, Long sectionId, Long subjectId);
     boolean existsByTeacherIdAndSectionIdAndSubjectId(Long teacherId, Long sectionId, Long subjectId);
+    boolean existsByTeacherId(Long teacherId);
 }

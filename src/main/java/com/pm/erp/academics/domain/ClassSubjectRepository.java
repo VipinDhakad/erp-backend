@@ -7,4 +7,5 @@ import java.util.List;
 public interface ClassSubjectRepository extends JpaRepository<ClassSubject, ClassSubject.PK> {
     List<ClassSubject> findByClassId(Long classId);
     void deleteByClassId(Long classId);
+    boolean existsBySubjectId(Long subjectId);
 }
